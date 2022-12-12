@@ -3,16 +3,18 @@ import time
 
 class Game(Thread):
     countdown = 5
-    started = False
+    ready  = False
     players = []
     def __init__(self):
         Thread.__init__(self)
+        self.start()
+
 
     def startGame(self, players):
         for p in players:
             p['play'] = -1
         self.players = players
-        self.start()
+        self.ready = True
     
     def send(self, msg):
         for p in self.players:
@@ -21,7 +23,7 @@ class Game(Thread):
     def allPlayed(self):
         return len(self.players) == len(list(filter(lambda p: p['play'] >= 0, self.players)))
 
-    def run(self):
+    def gameLoop(self):
         for i in reversed(range(1,1+self.countdown)):
             time.sleep(1)
             self.send("starting in %s seconds" % str(i))
@@ -37,10 +39,17 @@ class Game(Thread):
             winners = list(filter(lambda p: p['play'] == winner, self.players))
             winnerNames = [p['username'] for p in winners]
             if len(winners) == 1:
-                self.send("Your winner is " % next(winnerNames))
+                self.send("Your winner is %s" % winnerNames[0])
             else:
                 self.send("Your winners are %s" % ", ".join(winnerNames))
         self.send("Press Ready to play again")
+        self.ready = False
+
+    def run(self):
+        while True:
+            if self.ready:
+                self.gameLoop()
+
 
 
 
