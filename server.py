@@ -70,7 +70,7 @@ def send_receive_client_message(client_connection, client_ip):
                     if cmd == "ready":
                         player['ready'] = not player['ready']
 
-                        roomPlayers = list(filter(lambda p: player['room'] == p['room'], players))
+                        roomPlayers = list(filter(lambda p: 'room' in p and player['room'] == p['room'], players))
                         playersReady = len(list(filter(lambda p: p['ready'], roomPlayers)))
 
                         if playersReady > 1 and playersReady == len(players):
@@ -85,7 +85,7 @@ def send_receive_client_message(client_connection, client_ip):
                     if cmd == "msg":
                         for p in players:
                             if p['connection'] != client_connection and p['room'] == player['room']:
-                                p['connection'].send(bytes(player['name'] + "->" + stuff, "utf-8")) 
+                                p['connection'].send(bytes(player['username'] + "->" + " ".join(stuff), "utf-8")) 
                     if cmd == "create":
                         room = genRoomKey()
                         player['room'] = room
