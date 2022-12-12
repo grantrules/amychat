@@ -35,7 +35,7 @@ class Game(Thread):
             self.send("You're all losers")
         else:
             [a,b] = guesses
-            winner = a if ((a + 1) % 3 == b) else b
+            winner = a if not ((a + 1) % 3 == b) else b
             winners = list(filter(lambda p: p['play'] == winner, self.players))
             winnerNames = [p['username'] for p in winners]
             if len(winners) == 1:
