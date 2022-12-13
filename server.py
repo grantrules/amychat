@@ -38,20 +38,19 @@ def accept_clients(the_server, y):
 
         threading._start_new_thread(send_receive_client_message, (client, address))
 
+def find_player(client_connection, players):
+    return next(filter(lambda p: p['connection'] == client_connection, players))
 
 def send_receive_client_message(client_connection, client_ip):
     global server, players
     client_msg = " "
 
-    player = next(filter(lambda p: p['connection'] == client_connection, players))
+    player = find_player(client_connection, players)
  
 
     while True:
         data = client_connection.recv(4096)
         if data:
-
-
-
 
             client_msgs = data.decode("utf-8")
             cmds = client_msgs.split("\n")
@@ -60,13 +59,12 @@ def send_receive_client_message(client_connection, client_ip):
                 if 'username' not in player:
                     # should normalize this
                     player['username'] = client_msg
-                    send(client_connection, "welcome Hi " + player['username'] + ". Type exit to leave.")
+                    send(client_connection, "welcome Hi %s. Type exit to leave." % player['username'])
                     print("Joined: %s" % player['username'])
                 elif data == "exit": break
                 else:
-                    bleh = client_msg.split(" ")
-                    cmd = bleh[0]
-                    stuff = bleh[1:]
+                    [cmd, *stuff] = client_msg.split(" ", 1)
+                    stuff = None if len(stuff) == 0 else stuff[0]
                     if cmd == "ready":
                         player['ready'] = not player['ready']
 
@@ -85,18 +83,18 @@ def send_receive_client_message(client_connection, client_ip):
                     if cmd == "msg":
                         for p in players:
                             if p['connection'] != client_connection and p['room'] == player['room']:
-                                p['connection'].send(bytes(player['username'] + "->" + " ".join(stuff), "utf-8")) 
+                                p['connection'].send(bytes("%s -> %s" % (player['username'], stuff), "utf-8")) 
                     if cmd == "create":
                         room = genRoomKey()
                         player['room'] = room
                         rooms[room] = Game()
-                        send(client_connection,"joined "+room)
+                        send(client_connection,"joined %s" % room)
                     if cmd == "join":
-                        room = stuff[0]
+                        room = stuff
                         player['room'] = room
                         sendRoom(room, "%s has joined" % player['username'])
                     if cmd == "play":
-                        play = int(stuff[0])
+                        play = int(stuff)
                         if play in range(0,3):
                             player['play'] = play
                         sendRoom(player['room'], "%s has played" % (player['username']))
