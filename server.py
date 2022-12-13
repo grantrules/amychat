@@ -1,4 +1,4 @@
-import random, string
+import random, string, getopt, sys
 import socket
 import threading
 
@@ -10,7 +10,23 @@ server = None
 HOST_ADDRESS = "0.0.0.0"
 HOST_PORT = 8080
 
+argumentList = sys.argv[1:]
+options = "hp:"
+long_options = ["help", "port="]
 
+try:
+    arguments, values = getopt.getopt(argumentList, options, long_options)
+    for currentArgument, currentValue in arguments:
+        if currentArgument in ("-h", "--help"):
+            print ("AmyChat server")
+            print ("-h|--help - shows this information")
+            print ("-p|--port <number> - define port on which server runs, default %s" % HOST_PORT)
+            exit()
+        elif currentArgument in ("-p", "--port"):
+            HOST_PORT = currentValue
+            print(currentValue)
+except getopt.error as err:
+    print (str(err))
 
 players = []
 rooms = {}
@@ -43,11 +59,9 @@ def find_player(client_connection, players):
 
 def send_receive_client_message(client_connection, client_ip):
     global server, players
-    client_msg = " "
 
     player = find_player(client_connection, players)
  
-
     while True:
         data = client_connection.recv(4096)
         if data:
@@ -63,8 +77,7 @@ def send_receive_client_message(client_connection, client_ip):
                     print("Joined: %s" % player['username'])
                 elif data == "exit": break
                 else:
-                    [cmd, *stuff] = client_msg.split(" ", 1)
-                    stuff = None if len(stuff) == 0 else stuff[0]
+                    (cmd,_,stuff) = client_msg.partition(" ")
                     if cmd == "ready":
                         player['ready'] = not player['ready']
 
